@@ -19,7 +19,7 @@ var (
 )
 
 // Validate returns validates the token, then returns just the parsed JSON from the JWT
-func Validate(ctx context.Context, providerURL, token string) (*JwtPayload, error) {
+func Validate(ctx context.Context, providerURL, token string) (*Payload, error) {
 	// triggers a web request
 	provider, err := oidc.NewProvider(ctx, providerURL)
 	if err != nil {
@@ -52,7 +52,7 @@ func Validate(ctx context.Context, providerURL, token string) (*JwtPayload, erro
 		return nil, errors.Wrap(err, "failed to validate token")
 	}
 
-	jwtp := new(JwtPayload)
+	jwtp := new(Payload)
 	err = json.Unmarshal(payload, jwtp)
 	if err != nil {
 		return nil, errors.New("failed to parse jwt payload")
@@ -95,7 +95,8 @@ func parseJWT(p string) ([]byte, error) {
 	return payload, nil
 }
 
-type JwtPayload struct {
+// Payload base JWT payload
+type Payload struct {
 	Sub      string   `json:"sub"`
 	TokenUse string   `json:"token_use"`
 	Scope    string   `json:"scope"`
@@ -108,8 +109,10 @@ type JwtPayload struct {
 	ClientID string   `json:"client_id"`
 }
 
+// JSONTime represents a time which has been parsed from a epoch seconds
 type JSONTime time.Time
 
+// UnmarshalJSON parse the epoch unix time
 func (j *JSONTime) UnmarshalJSON(b []byte) error {
 	var n json.Number
 	if err := json.Unmarshal(b, &n); err != nil {
@@ -130,6 +133,7 @@ func (j *JSONTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// Time returns the time value
 func (j *JSONTime) Time() time.Time {
 	return time.Time(*j)
 }
@@ -143,6 +147,7 @@ func contains(sli []string, ele string) bool {
 	return false
 }
 
+// SplitScopes simple helper to split and return scopes as an array
 func SplitScopes(scope string) []string {
 	return strings.Split(scope, " ")
 }
